@@ -50,7 +50,7 @@ def get_cpu(duration=4, all_cpu=True, threshold=90):
             'alert_status': avg > threshold,
             'message': f'cpu usage over {duration} seconds is {usage}'}
 
-def parse_args(arg):
+def parse_arg_number(arg):
     '''
     helper to parse the command line argument
     which should provide the number of times to cycle through
@@ -66,20 +66,35 @@ def parse_args(arg):
         print('please provide a number as an argument for the number of tests that you wish to run')
         return (None, None)
 
+def parse_all_arg(arg):
+    '''
+    helper function to make sure additional functions are run when desired
+    '''
+    try:
+        if arg[2].lower() == 'all':
+            return True
+    except Exception as Error:
+        return None
+
 health_functions = [check_temp]
+all_funcs = [check_temp, get_memory, get_cpu]
 
 if __name__ == '__main__':
     repeat = 1
     count = 0
-    if len(sys.argv) == 2:
-        valid, arg = parse_args(sys.argv[1])
+    if len(sys.argv) >= 2:
+        valid, arg = parse_arg_number(sys.argv[1])
         if valid:
             repeat = arg
+        invoke_all = parse_all_arg(sys.argv)
+        if invoke_all:
+              health_functions = all_funcs
     while count < repeat:
         print('\n')
         for f in health_functions:
+            print(datetime.now())
             check = f()
-            m_str = f"{datetime.now()}: {check['message']}"
+            m_str = f"{check['message']}"
             if check['alert_status']:
                 print('ALERT!')
                 print(m_str)
